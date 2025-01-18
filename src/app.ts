@@ -2,6 +2,7 @@ import express from 'express'
 import * as dotenv from 'dotenv'
 import { loadModels, patchFaceAPI } from '@/utils/models'
 import compareRoutes from '@/routes/compareRoutes'
+import registerRoutes from '@/routes/registerRoutes'
 
 dotenv.config()
 
@@ -14,6 +15,7 @@ app.get('/', (_req, res) => {
     res.send('server is running..')
 })
 
+app.use('/', registerRoutes)
 app.use('/', compareRoutes)
 
 const startServer = async () => {
