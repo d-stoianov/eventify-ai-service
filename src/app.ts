@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv'
 import express from 'express'
 import path from 'path'
+import cors from 'cors'
 import { loadModels, patchFaceAPI } from '@/utils/models'
 import compareRoutes from '@/routes/compareRoutes'
 import registerRoutes from '@/routes/registerRoutes'
@@ -15,8 +16,13 @@ app.get('/', (_req, res) => {
     res.send('server is running..')
 })
 
-app.use(express.json())
+const corsOptions = {
+    origin: process.env.ORIGIN,
+}
 
+app.use(cors(corsOptions))
+app.use(express.json())
+app.use(cors(corsOptions))
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 
 app.use('/', registerRoutes)
