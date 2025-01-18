@@ -37,7 +37,7 @@ registerRoutes.post(
                     const tempPath = photo.path
                     const targetPath = path.join(
                         eventFolder,
-                        photo.originalname
+                        photo.originalname.replace(/ /g, '_') // replace spaces with underscores
                     )
 
                     fs.renameSync(tempPath, targetPath)
@@ -47,11 +47,11 @@ registerRoutes.post(
                 return
             }
 
+            const images = fs.readdirSync(eventFolder)
+
             const result: RegisterResult = {
                 eventId: uniqueId,
-                photos: files['photos']
-                    ? files['photos']?.map((file: any) => file.originalname)
-                    : [],
+                photos: images,
             }
 
             res.status(200).json(result)
