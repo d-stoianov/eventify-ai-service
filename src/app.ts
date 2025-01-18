@@ -1,5 +1,6 @@
-import express, { Request, Response } from 'express'
+import express from 'express'
 import * as dotenv from 'dotenv'
+import { loadModels, patchFaceAPI } from './utils/models'
 
 dotenv.config()
 
@@ -8,10 +9,13 @@ const port = process.env.PORT || 3000
 
 app.use(express.json())
 
-app.get('/', (req: Request, res: Response) => {
-    res.send('testing..')
-})
+const startServer = async () => {
+    await loadModels()
+    patchFaceAPI()
 
-app.listen(port, () => {
-    console.log(`server is running at http://localhost:${port}`)
-})
+    app.listen(port, () => {
+        console.log(`server is running on http://localhost:${port}`)
+    })
+}
+
+startServer()
