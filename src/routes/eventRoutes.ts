@@ -112,6 +112,9 @@ eventRoutes.post(
                 }
             })
 
+            // delete selfie file when finished
+            fs.unlinkSync(selfiePath)
+
             const result: EventResponse = {
                 message:
                     convertedImageUrls.length === 0
