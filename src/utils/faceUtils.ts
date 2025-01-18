@@ -27,7 +27,7 @@ export const compareSingleWithMultiple = async (
 
     const srcDescriptor = srcDescriptors[0] // assume the src contains only one face
 
-    const threshold = 0.6 // distance threshold for matching
+    const threshold = 0.55 // distance threshold for matching
     const result: CompareResult[] = []
 
     // compare the src with dest photo
