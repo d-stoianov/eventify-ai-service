@@ -55,8 +55,11 @@ eventRoutes.get(
 
             const images = fs.readdirSync(eventFolder)
 
+            const protocol =
+                req.get('x-forwarded-proto') || req.protocol || 'http'
+
             const imageUrls = images.map((file) => {
-                return `${req.protocol}://${req.get(
+                return `${protocol}://${req.get(
                     'host'
                 )}/uploads/${eventId}/${file}`
             })
@@ -113,10 +116,13 @@ eventRoutes.post(
                 imagePaths
             )
 
+            const protocol =
+                req.get('x-forwarded-proto') || req.protocol || 'http'
+
             const convertedImageUrls: string[] = []
             compareResult.forEach((res) => {
                 if (res.match) {
-                    const imgPath = `${req.protocol}://${req.get('host')}${
+                    const imgPath = `${protocol}://${req.get('host')}${
                         res.path
                     }`
                     convertedImageUrls.push(imgPath)
