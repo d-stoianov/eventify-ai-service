@@ -12,6 +12,9 @@ dotenv.config()
 const app = express()
 const port = process.env.PORT || 3000
 
+const uploadsPath =
+    process.env.UPLOADS_ABSOLUTE_PATH || path.join(__dirname, '../uploads')
+
 app.get('/', (_req, res) => {
     res.send('server is running..')
 })
@@ -22,8 +25,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions))
 app.use(express.json())
-app.use(cors(corsOptions))
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
+
+app.use('/uploads', express.static(uploadsPath))
 
 app.use('/', registerRoutes)
 app.use('/', eventRoutes)

@@ -1,8 +1,17 @@
+import * as dotenv from 'dotenv'
 import { Request, Response, Router } from 'express'
 import { compareSingleWithMultiple } from '../utils/faceUtils'
 import multer from 'multer'
+import path from 'path'
 
-const upload = multer({ dest: 'uploads/' })
+dotenv.config()
+
+const uploadsPath =
+    process.env.UPLOADS_ABSOLUTE_PATH || path.join(__dirname, '../uploads')
+
+const upload = multer({
+    dest: path.join(uploadsPath),
+})
 
 const uploadFiles = upload.fields([
     { name: 'selfie', maxCount: 1 },

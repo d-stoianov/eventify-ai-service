@@ -1,15 +1,24 @@
+import * as dotenv from 'dotenv'
 import { Request, Response, Router } from 'express'
 import fs from 'fs'
 import path from 'path'
 import multer from 'multer'
 import { compareSingleWithMultiple } from '@/utils/faceUtils'
 
+dotenv.config()
+
 interface EventResponse {
     message: 'Success' | 'No matches found'
     images: string[]
 }
 
-const upload = multer({ dest: 'uploads/temp' })
+const uploadsPath =
+    process.env.UPLOADS_ABSOLUTE_PATH || path.join(__dirname, '../uploads')
+
+const upload = multer({
+    dest: path.join(uploadsPath, 'temp'),
+})
+
 const uploadFiles = upload.fields([{ name: 'selfie', maxCount: 1 }])
 
 const eventRoutes = Router()
@@ -37,7 +46,7 @@ eventRoutes.get(
                 return
             }
 
-            const eventFolder = path.join('uploads', eventId)
+            const eventFolder = path.join(uploadsPath, eventId)
 
             if (!fs.existsSync(eventFolder)) {
                 res.status(400).send('No folder by provided id')
@@ -77,7 +86,7 @@ eventRoutes.post(
                 return
             }
 
-            const eventFolder = path.join('uploads', eventId)
+            const eventFolder = path.join(uploadsPath, eventId)
 
             if (!fs.existsSync(eventFolder)) {
                 res.status(400).send('No folder by provided id')
@@ -94,8 +103,10 @@ eventRoutes.post(
 
             const images = fs.readdirSync(eventFolder)
             const imagePaths = images.map((file) => {
-                return `uploads/${eventId}/${file}`
+                return `${uploadsPath}/${eventId}/${file}`
             })
+
+            console.log('imagePaths', imagePaths)
 
             const compareResult = await compareSingleWithMultiple(
                 selfiePath,
@@ -105,7 +116,7 @@ eventRoutes.post(
             const convertedImageUrls: string[] = []
             compareResult.forEach((res) => {
                 if (res.match) {
-                    const imgPath = `${req.protocol}://${req.get('host')}/${
+                    const imgPath = `${req.protocol}://${req.get('host')}${
                         res.path
                     }`
                     convertedImageUrls.push(imgPath)
