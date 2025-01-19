@@ -109,8 +109,6 @@ eventRoutes.post(
                 return `${uploadsPath}/${eventId}/${file}`
             })
 
-            console.log('imagePaths', imagePaths)
-
             const compareResult = await compareSingleWithMultiple(
                 selfiePath,
                 imagePaths
@@ -121,10 +119,17 @@ eventRoutes.post(
 
             const convertedImageUrls: string[] = []
             compareResult.forEach((res) => {
+                const filePart = res.path.split('/uploads')[1]
+                if (!filePart) {
+                    return
+                }
+
+                const nonAbsolutePath = '/uploads' + filePart
+
                 if (res.match) {
-                    const imgPath = `${protocol}://${req.get('host')}${
-                        res.path
-                    }`
+                    const imgPath = `${protocol}://${req.get(
+                        'host'
+                    )}${nonAbsolutePath}`
                     convertedImageUrls.push(imgPath)
                 }
             })
