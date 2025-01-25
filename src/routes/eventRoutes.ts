@@ -1,22 +1,19 @@
-import * as dotenv from 'dotenv'
 import { Request, Response, Router } from 'express'
 import fs from 'fs'
 import path from 'path'
 import multer from 'multer'
-import { compareSingleWithMultiple } from '@/utils/faceUtils'
 
-dotenv.config()
+import { CONFIG } from '@/config'
+
+import { compareSingleWithMultiple } from '@/utils/faceUtils'
 
 interface EventResponse {
     message: 'Success' | 'No matches found'
     images: string[]
 }
 
-const uploadsPath =
-    process.env.UPLOADS_ABSOLUTE_PATH || path.join(__dirname, '../uploads')
-
 const upload = multer({
-    dest: path.join(uploadsPath, 'temp'),
+    dest: path.join(CONFIG.UPLOADS_PATH, 'temp'),
 })
 
 const uploadFiles = upload.fields([{ name: 'selfie', maxCount: 1 }])
@@ -46,7 +43,7 @@ eventRoutes.get(
                 return
             }
 
-            const eventFolder = path.join(uploadsPath, eventId)
+            const eventFolder = path.join(CONFIG.UPLOADS_PATH, eventId)
 
             if (!fs.existsSync(eventFolder)) {
                 res.status(400).send('No folder by provided id')
@@ -89,7 +86,7 @@ eventRoutes.post(
                 return
             }
 
-            const eventFolder = path.join(uploadsPath, eventId)
+            const eventFolder = path.join(CONFIG.UPLOADS_PATH, eventId)
 
             if (!fs.existsSync(eventFolder)) {
                 res.status(400).send('No folder by provided id')
@@ -106,7 +103,7 @@ eventRoutes.post(
 
             const images = fs.readdirSync(eventFolder)
             const imagePaths = images.map((file) => {
-                return `${uploadsPath}/${eventId}/${file}`
+                return `${CONFIG.UPLOADS_PATH}/${eventId}/${file}`
             })
 
             const compareResult = await compareSingleWithMultiple(

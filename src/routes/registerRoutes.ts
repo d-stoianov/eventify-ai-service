@@ -1,11 +1,10 @@
-import * as dotenv from 'dotenv'
 import { Request, Response, Router } from 'express'
-import multer from 'multer'
-import { v4 as uuidv4 } from 'uuid'
 import fs from 'fs'
 import path from 'path'
+import multer from 'multer'
+import { v4 as uuidv4 } from 'uuid'
 
-dotenv.config()
+import { CONFIG } from '@/config'
 
 interface RegisterResult {
     eventId: string
@@ -14,11 +13,8 @@ interface RegisterResult {
 
 const registerRoutes = Router()
 
-const uploadsPath =
-    process.env.UPLOADS_ABSOLUTE_PATH || path.join(__dirname, '../uploads')
-
 const upload = multer({
-    dest: path.join(uploadsPath, 'temp'),
+    dest: path.join(CONFIG.UPLOADS_PATH, 'temp'),
 })
 const uploadFiles = upload.fields([{ name: 'photos', maxCount: 100 }])
 
@@ -30,7 +26,7 @@ registerRoutes.post(
             // generate uuid without dashes
             const uniqueId = uuidv4().replace(/-/g, '')
 
-            const eventFolder = path.join(uploadsPath, uniqueId)
+            const eventFolder = path.join(CONFIG.UPLOADS_PATH, uniqueId)
 
             if (!fs.existsSync(eventFolder)) {
                 fs.mkdirSync(eventFolder, { recursive: true })
