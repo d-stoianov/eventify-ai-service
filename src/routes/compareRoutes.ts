@@ -4,7 +4,7 @@ import multer from 'multer'
 
 import { CONFIG } from '@/config'
 
-import { compareSingleWithMultiple } from '@/utils/faceUtils'
+import { compareSingleWithMultiple } from '@/utils/FaceCompareApi'
 
 const upload = multer({
     dest: path.join(CONFIG.UPLOADS_PATH),

@@ -5,7 +5,7 @@ import multer from 'multer'
 
 import { CONFIG } from '@/config'
 
-import { compareSingleWithMultiple } from '@/utils/faceUtils'
+import { compareSingleWithMultiple } from '@/utils/FaceCompareApi'
 
 interface EventResponse {
     message: 'Success' | 'No matches found'
