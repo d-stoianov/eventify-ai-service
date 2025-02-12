@@ -4,10 +4,15 @@ import path from 'path'
 import multer from 'multer'
 
 import { CONFIG } from '@/config'
+import {
+    getFaceEmbeddings,
+    compareEmbeddingWithMultiple,
+    FaceEmbeddings,
+} from '@/utils/faceUtils'
 
 interface EventResponse {
     message: 'Success' | 'No matches found'
-    images: string[]
+    photos: string[]
 }
 
 const upload = multer({
@@ -42,13 +47,14 @@ eventRoutes.get(
             }
 
             const eventFolder = path.join(CONFIG.UPLOADS_PATH, eventId)
+            const photosFolder = path.join(eventFolder, 'photos')
 
             if (!fs.existsSync(eventFolder)) {
                 res.status(400).send('No folder by provided id')
                 return
             }
 
-            const images = fs.readdirSync(eventFolder)
+            const images = fs.readdirSync(photosFolder)
 
             const protocol =
                 req.get('x-forwarded-proto') || req.protocol || 'http'
@@ -56,12 +62,12 @@ eventRoutes.get(
             const imageUrls = images.map((file) => {
                 return `${protocol}://${req.get(
                     'host'
-                )}/uploads/${eventId}/${file}`
+                )}/uploads/${eventId}/photos/${file}`
             })
 
             const result: EventResponse = {
                 message: 'Success',
-                images: imageUrls,
+                photos: imageUrls,
             }
 
             res.status(200).json(result)
@@ -85,6 +91,8 @@ eventRoutes.post(
             }
 
             const eventFolder = path.join(CONFIG.UPLOADS_PATH, eventId)
+            const photosFolder = path.join(eventFolder, 'photos')
+            const embeddingsFolder = path.join(eventFolder, 'embeddings')
 
             if (!fs.existsSync(eventFolder)) {
                 res.status(400).send('No folder by provided id')
@@ -99,48 +107,67 @@ eventRoutes.post(
                 return
             }
 
-            const images = fs.readdirSync(eventFolder)
-            const imagePaths = images.map((file) => {
-                return `${CONFIG.UPLOADS_PATH}/${eventId}/${file}`
+            const photosFileNames = fs.readdirSync(photosFolder)
+
+            const photosEmbeddings = fs
+                .readdirSync(embeddingsFolder)
+                .map((file) => {
+                    const filePath = path.join(embeddingsFolder, file)
+                    // with many faces
+                    const embeddingArray = JSON.parse(
+                        fs.readFileSync(filePath, 'utf8')
+                    ) as FaceEmbeddings
+
+                    return embeddingArray // convert each face embedding to Float32Array
+                })
+
+            const selfieEmbeddings = await getFaceEmbeddings(selfiePath)
+
+            // check how many faces
+            switch (selfieEmbeddings.length) {
+                case 0:
+                    res.status(400).send('No faces detected on the selfie')
+                    return
+                case 1: // 1 face = good, skip
+                    break
+                default:
+                    res.status(400).send('Selfie cant contain more than 1 face')
+                    return
+            }
+
+            const protocol =
+                req.get('x-forwarded-proto') || req.protocol || 'http'
+
+            const convertedImageUrls: string[] = []
+
+            photosEmbeddings.forEach((photoEmbeddings, idx) => {
+                const match = compareEmbeddingWithMultiple(
+                    selfieEmbeddings[0], // since selfie contains one face, take first one
+                    photoEmbeddings
+                )
+
+                if (match) {
+                    const photoFilePart = photosFileNames[idx]
+
+                    const imgPath = `${protocol}://${req.get(
+                        'host'
+                    )}/uploads/${eventId}/photos/${photoFilePart}`
+                    convertedImageUrls.push(imgPath)
+                }
             })
 
-            // const compareResult = await compareSingleWithMultiple(
-            //     selfiePath,
-            //     imagePaths
-            // )
+            // delete selfie file when finished
+            fs.unlinkSync(selfiePath)
 
-            // const protocol =
-            //     req.get('x-forwarded-proto') || req.protocol || 'http'
+            const result: EventResponse = {
+                message:
+                    convertedImageUrls.length === 0
+                        ? 'No matches found'
+                        : 'Success',
+                photos: convertedImageUrls,
+            }
 
-            // const convertedImageUrls: string[] = []
-            // compareResult.forEach((res) => {
-            //     const filePart = res.path.split('/uploads')[1]
-            //     if (!filePart) {
-            //         return
-            //     }
-
-            //     const nonAbsolutePath = '/uploads' + filePart
-
-            //     if (res.match) {
-            //         const imgPath = `${protocol}://${req.get(
-            //             'host'
-            //         )}${nonAbsolutePath}`
-            //         convertedImageUrls.push(imgPath)
-            //     }
-            // })
-
-            // // delete selfie file when finished
-            // fs.unlinkSync(selfiePath)
-
-            // const result: EventResponse = {
-            //     message:
-            //         convertedImageUrls.length === 0
-            //             ? 'No matches found'
-            //             : 'Success',
-            //     images: convertedImageUrls,
-            // }
-
-            res.status(200).json({})
+            res.status(200).json(result)
         } catch (error) {
             res.status(400).send((error as Error).message)
         }

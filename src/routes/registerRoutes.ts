@@ -65,6 +65,10 @@ registerRoutes.post(
                         targetPhotoPath
                     )
 
+                    const photoEmbeddingsArrays = photoEmbeddings.map(
+                        (embedding) => Array.from(embedding) // convert each Float32Array to a regular array
+                    )
+
                     const photoEmbeddingsJsonFileName =
                         processedPhotoFileName.replace(
                             path.extname(processedPhotoFileName),
@@ -77,7 +81,7 @@ registerRoutes.post(
                     // write embeddings json to /eventid/embeddings
                     fs.writeFileSync(
                         photoEmbeddingsJsonPath,
-                        JSON.stringify(photoEmbeddings)
+                        JSON.stringify(photoEmbeddingsArrays)
                     )
                 }
             } else {

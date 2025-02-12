@@ -5,7 +5,6 @@ import { CONFIG } from '@/config'
 
 import { loadModels, patchFaceAPI } from '@/utils/models'
 
-import compareRoutes from '@/routes/compareRoutes'
 import registerRoutes from '@/routes/registerRoutes'
 import eventRoutes from '@/routes/eventRoutes'
 
@@ -31,7 +30,6 @@ app.use('/uploads', express.static(uploadsPath))
 
 app.use('/', registerRoutes)
 app.use('/', eventRoutes)
-app.use('/', compareRoutes)
 
 const startServer = async () => {
     await loadModels()

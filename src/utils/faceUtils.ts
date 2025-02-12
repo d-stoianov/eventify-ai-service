@@ -1,11 +1,12 @@
 import { loadImage } from 'canvas'
 import * as faceapi from 'face-api.js'
 
-type FaceEmbedding = Float32Array<ArrayBufferLike>
+export type FaceEmbedding = Float32Array<ArrayBufferLike>
+export type FaceEmbeddings = FaceEmbedding[]
 
 export const getFaceEmbeddings = async (
     imagePath: string
-): Promise<FaceEmbedding[]> => {
+): Promise<FaceEmbeddings> => {
     console.log('imagePath', imagePath)
 
     const img: any = await loadImage(imagePath)
@@ -18,14 +19,12 @@ export const getFaceEmbeddings = async (
 
 export const compareEmbeddingWithMultiple = (
     srcEmbedding: FaceEmbedding,
-    destEmbeddings: FaceEmbedding[]
+    destEmbeddings: FaceEmbeddings
 ): boolean => {
     const threshold = 0.55 // distance threshold for matching
 
-    const match = destEmbeddings.some((destEmbedding: FaceEmbedding) => {
+    return destEmbeddings.some((destEmbedding: FaceEmbedding, idx) => {
         const distance = faceapi.euclideanDistance(srcEmbedding, destEmbedding)
         return distance < threshold
     })
-
-    return match
 }
