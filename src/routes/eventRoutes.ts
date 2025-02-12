@@ -5,8 +5,6 @@ import multer from 'multer'
 
 import { CONFIG } from '@/config'
 
-import { compareSingleWithMultiple } from '@/utils/faceUtils'
-
 interface EventResponse {
     message: 'Success' | 'No matches found'
     images: string[]
@@ -106,43 +104,43 @@ eventRoutes.post(
                 return `${CONFIG.UPLOADS_PATH}/${eventId}/${file}`
             })
 
-            const compareResult = await compareSingleWithMultiple(
-                selfiePath,
-                imagePaths
-            )
+            // const compareResult = await compareSingleWithMultiple(
+            //     selfiePath,
+            //     imagePaths
+            // )
 
-            const protocol =
-                req.get('x-forwarded-proto') || req.protocol || 'http'
+            // const protocol =
+            //     req.get('x-forwarded-proto') || req.protocol || 'http'
 
-            const convertedImageUrls: string[] = []
-            compareResult.forEach((res) => {
-                const filePart = res.path.split('/uploads')[1]
-                if (!filePart) {
-                    return
-                }
+            // const convertedImageUrls: string[] = []
+            // compareResult.forEach((res) => {
+            //     const filePart = res.path.split('/uploads')[1]
+            //     if (!filePart) {
+            //         return
+            //     }
 
-                const nonAbsolutePath = '/uploads' + filePart
+            //     const nonAbsolutePath = '/uploads' + filePart
 
-                if (res.match) {
-                    const imgPath = `${protocol}://${req.get(
-                        'host'
-                    )}${nonAbsolutePath}`
-                    convertedImageUrls.push(imgPath)
-                }
-            })
+            //     if (res.match) {
+            //         const imgPath = `${protocol}://${req.get(
+            //             'host'
+            //         )}${nonAbsolutePath}`
+            //         convertedImageUrls.push(imgPath)
+            //     }
+            // })
 
-            // delete selfie file when finished
-            fs.unlinkSync(selfiePath)
+            // // delete selfie file when finished
+            // fs.unlinkSync(selfiePath)
 
-            const result: EventResponse = {
-                message:
-                    convertedImageUrls.length === 0
-                        ? 'No matches found'
-                        : 'Success',
-                images: convertedImageUrls,
-            }
+            // const result: EventResponse = {
+            //     message:
+            //         convertedImageUrls.length === 0
+            //             ? 'No matches found'
+            //             : 'Success',
+            //     images: convertedImageUrls,
+            // }
 
-            res.status(200).json(result)
+            res.status(200).json({})
         } catch (error) {
             res.status(400).send((error as Error).message)
         }

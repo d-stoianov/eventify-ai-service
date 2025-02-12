@@ -1,7 +1,13 @@
 import { loadImage } from 'canvas'
 import * as faceapi from 'face-api.js'
 
-export const getFaceDescriptors = async (imagePath: string): Promise<any> => {
+type FaceEmbedding = Float32Array<ArrayBufferLike>
+
+export const getFaceEmbeddings = async (
+    imagePath: string
+): Promise<FaceEmbedding[]> => {
+    console.log('imagePath', imagePath)
+
     const img: any = await loadImage(imagePath)
     const detections = await faceapi
         .detectAllFaces(img)
@@ -10,43 +16,16 @@ export const getFaceDescriptors = async (imagePath: string): Promise<any> => {
     return detections.map((det) => det.descriptor)
 }
 
-interface CompareResult {
-    path: string
-    match: boolean
-}
-
-export const compareSingleWithMultiple = async (
-    srcPath: string,
-    destPaths: string[]
-): Promise<CompareResult[]> => {
-    const srcDescriptors = await getFaceDescriptors(srcPath)
-
-    if (srcDescriptors.length === 0) {
-        throw new Error('No face detected in source')
-    }
-
-    const srcDescriptor = srcDescriptors[0] // assume the src contains only one face
-
+export const compareEmbeddingWithMultiple = (
+    srcEmbedding: FaceEmbedding,
+    destEmbeddings: FaceEmbedding[]
+): boolean => {
     const threshold = 0.55 // distance threshold for matching
-    const result: CompareResult[] = []
 
-    // compare the src with dest photo
-    for (const destPath of destPaths) {
-        const destDescriptors = await getFaceDescriptors(destPath)
+    const match = destEmbeddings.some((destEmbedding: FaceEmbedding) => {
+        const distance = faceapi.euclideanDistance(srcEmbedding, destEmbedding)
+        return distance < threshold
+    })
 
-        const match = destDescriptors.some((destDescriptor: any) => {
-            const distance = faceapi.euclideanDistance(
-                srcDescriptor,
-                destDescriptor
-            )
-            return distance < threshold
-        })
-
-        result.push({
-            path: destPath,
-            match,
-        })
-    }
-
-    return result
+    return match
 }

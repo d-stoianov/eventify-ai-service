@@ -4,8 +4,6 @@ import multer from 'multer'
 
 import { CONFIG } from '@/config'
 
-import { compareSingleWithMultiple } from '@/utils/faceUtils'
-
 const upload = multer({
     dest: path.join(CONFIG.UPLOADS_PATH),
 })
@@ -37,12 +35,12 @@ compareRoutes.post(
                 return
             }
 
-            const result = await compareSingleWithMultiple(
-                selfiePath,
-                groupPaths
-            )
+            // const result = await compareSingleWithMultiple(
+            //     selfiePath,
+            //     groupPaths
+            // )
 
-            res.json({ result })
+            res.json({})
         } catch (error) {
             res.status(400).send((error as Error).message)
         }

@@ -5,10 +5,12 @@ import multer from 'multer'
 import { v4 as uuidv4 } from 'uuid'
 
 import { CONFIG } from '@/config'
+import { getFaceEmbeddings } from '@/utils/faceUtils'
 
 interface RegisterResult {
     eventId: string
     photos: string[]
+    embeddings: string[]
 }
 
 const registerRoutes = Router()
@@ -24,38 +26,72 @@ registerRoutes.post(
     async (req: Request, res: Response): Promise<void> => {
         try {
             // generate uuid without dashes
-            const uniqueId = uuidv4().replace(/-/g, '')
+            const eventId = uuidv4().replace(/-/g, '')
 
-            const eventFolder = path.join(CONFIG.UPLOADS_PATH, uniqueId)
+            const eventFolder = path.join(CONFIG.UPLOADS_PATH, eventId)
+            const photosFolder = path.join(eventFolder, 'photos')
+            const embeddingsFolder = path.join(eventFolder, 'embeddings')
 
             if (!fs.existsSync(eventFolder)) {
                 fs.mkdirSync(eventFolder, { recursive: true })
+                fs.mkdirSync(photosFolder, { recursive: true })
+                fs.mkdirSync(embeddingsFolder, { recursive: true })
             }
 
+            // form data
             const files: any = req.files
-
             if (files && files['photos']) {
                 const photos = files['photos'] as Express.Multer.File[]
 
                 for (const photo of photos) {
                     const tempPath = photo.path
-                    const targetPath = path.join(
-                        eventFolder,
-                        photo.originalname.replace(/ /g, '_') // replace spaces with underscores
+
+                    const processedPhotoFileName = photo.originalname.replace(
+                        / /g,
+                        '_' // replace spaces with underscores
                     )
 
-                    fs.renameSync(tempPath, targetPath)
+                    // photos
+                    const targetPhotoPath = path.join(
+                        photosFolder,
+                        processedPhotoFileName
+                    )
+
+                    // move photo from temp path to /eventid/photos
+                    fs.renameSync(tempPath, targetPhotoPath)
+
+                    // write embeddings to json
+                    const photoEmbeddings = await getFaceEmbeddings(
+                        targetPhotoPath
+                    )
+
+                    const photoEmbeddingsJsonFileName =
+                        processedPhotoFileName.replace(
+                            path.extname(processedPhotoFileName),
+                            '.json'
+                        )
+                    const photoEmbeddingsJsonPath = path.join(
+                        embeddingsFolder,
+                        photoEmbeddingsJsonFileName
+                    )
+                    // write embeddings json to /eventid/embeddings
+                    fs.writeFileSync(
+                        photoEmbeddingsJsonPath,
+                        JSON.stringify(photoEmbeddings)
+                    )
                 }
             } else {
                 res.status(400).send('No photos received')
                 return
             }
 
-            const images = fs.readdirSync(eventFolder)
+            const photos = fs.readdirSync(photosFolder)
+            const embeddings = fs.readdirSync(embeddingsFolder)
 
             const result: RegisterResult = {
-                eventId: uniqueId,
-                photos: images,
+                eventId: eventId,
+                photos: photos,
+                embeddings: embeddings,
             }
 
             res.status(200).json(result)
